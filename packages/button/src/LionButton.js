@@ -172,12 +172,25 @@ export class LionButton extends DisabledWithTabIndexMixin(SlotMixin(LitElement))
   }
 
   /**
-   * Dispatch submit event and invoke submit on the native form when clicked
+   * Dispatch submit event on the native form when clicked
    */
-  __clickDelegationHandler() {
-    if (this.type === 'submit' && this._nativeButtonNode && this._nativeButtonNode.form) {
+  __clickDelegationHandler(e) {
+    if (this.constructor.__isIE11()) {
+      // no need to do anything for IE11
+      e.stopPropagation();
+    } else if (this.constructor.__isFF()) {
+      if (this.type === 'submit' && this._nativeButtonNode && e.target === this) {
+        // this click renders multiple submits in other browsers
+        this._nativeButtonNode.click();
+      }
+    } else if (
+      this.type === 'submit' &&
+      this._nativeButtonNode &&
+      this._nativeButtonNode.form &&
+      e.target === this
+    ) {
+      // this submit cannot be prevented in FF
       this._nativeButtonNode.form.dispatchEvent(new Event('submit'));
-      this._nativeButtonNode.form.submit();
     }
   }
 
@@ -237,6 +250,12 @@ export class LionButton extends DisabledWithTabIndexMixin(SlotMixin(LitElement))
   static __isIE11() {
     const ua = window.navigator.userAgent;
     const result = /Trident/.test(ua);
+    return result;
+  }
+
+  static __isFF() {
+    const ua = window.navigator.userAgent;
+    const result = /Firefox/.test(ua);
     return result;
   }
 }

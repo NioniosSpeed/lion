@@ -1,3 +1,4 @@
+import { LitElement } from '@lion/core';
 import { storiesOf, html } from '@open-wc/demoing-storybook';
 import { bug12 } from '@lion/icon/stories/icons/bugs-collection.js';
 import '@lion/icon/lion-icon.js';
@@ -32,17 +33,86 @@ storiesOf('Buttons|Button', module)
       </div>
     `,
   )
-  .add(
-    'Within a form',
-    () => html`
-      <form @submit=${() => console.log('native form submitted')}>
-        <input name="foo" label="Foo" .modelValue=${'bar'} />
-        <input name="foo2" label="Foo2" .modelValue=${'bar'} />
-        <lion-button
-          type="submit"
-          @click=${() => console.log(document.querySelector('#form').serializeGroup())}
-          >Submit</lion-button
-        >
-      </form>
-    `,
-  );
+  .add('Within a form', () => {
+    class formExample extends LitElement {
+      constructor() {
+        super();
+        this.name = '';
+      }
+
+      static get properties() {
+        return {
+          name: {
+            type: String,
+          },
+        };
+      }
+
+      setSubmittedButton(inputId, event) {
+        event.preventDefault();
+        this.name = this.shadowRoot.getElementById(inputId).value;
+        console.log('My name is:', this.name);
+      }
+
+      render() {
+        return html`
+          <h1>Form Examples</h1>
+          <h2>Native Form</h2>
+          <form>
+            <label for="name1">Click:</label>
+            <input id="name1" name="name" value="123" />
+            <lion-button @click="${this.setSubmittedButton.bind(this, 'name1')}"
+              >Submit</lion-button
+            >
+          </form>
+          <form @submit="${this.setSubmittedButton.bind(this, 'name2')}">
+            <label for="name2">Submit:</label>
+            <input id="name2" name="name" value="234" />
+            <lion-button>Submit</lion-button>
+          </form>
+          <p>
+            See the result:
+            ${this.name
+              ? html`
+                  My name is ${this.name}
+                `
+              : html``}
+          </p>
+
+          <h2>Lion Form</h2>
+          <lion-form
+            ><form>
+              <label for="name3">Click:</label>
+              <input id="name3" name="name" value="345" />
+              <lion-button @click="${this.setSubmittedButton.bind(this, 'name3')}"
+                >Submit</lion-button
+              >
+            </form></lion-form
+          >
+
+          <lion-form @submit="${this.setSubmittedButton.bind(this, 'name4')}"
+            ><form>
+              <label for="name4">Submit:</label>
+              <input id="name4" name="name" value="456" />
+              <lion-button>Submit</lion-button>
+            </form></lion-form
+          >
+          <p>
+            See the result:
+            ${this.name
+              ? html`
+                  My name is ${this.name}
+                `
+              : html``}
+          </p>
+        `;
+      }
+    }
+    if (!customElements.get('form-example')) {
+      customElements.define('form-example', formExample);
+    }
+
+    return html`
+      <form-example></form-example>
+    `;
+  });
